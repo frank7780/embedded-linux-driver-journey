@@ -1,0 +1,27 @@
+# 忽略編譯出來的 Object files
+*.o
+*.ko
+*.mod.c
+*.mod
+*.a
+*.s
+
+# 忽略編譯過程檔
+*.order
+*.symvers
+.*.cmd
+.tmp_versions/
+
+# 忽略執行檔
+led_test
+led_test_static
+
+# 忽略編輯器暫存檔
+*.swp
+*~
+
+# 忽略打包好的 cpio (因為很大且可以重建)
+*.cpio
+
+# 忽略 QEMU build 目錄 (如果有的話)
+build/

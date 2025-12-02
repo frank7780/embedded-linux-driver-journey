@@ -1,5 +1,5 @@
 # 告訴 Kernel Build System 我們要編譯 hello.o
-obj-m += pci_driver.o
+obj-m += hello.o
 
 # 指向我們之前編譯好的 Kernel 原始碼路徑
 KDIR := ~/kernel_study/linux-6.6.14

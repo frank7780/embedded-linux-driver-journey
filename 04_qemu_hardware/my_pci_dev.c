@@ -11,6 +11,7 @@
 typedef struct {
     PCIDevice parent_obj; // 繼承自 PCI 裝置
     MemoryRegion mmio;    // 定義一塊 MMIO 記憶體區域
+    int irq_status; // [NEW] 紀錄中斷狀態 (0:無, 1:有)		  
 } MyPCIDevState;
 
 /* * 當 CPU 讀取我們的記憶體時，會執行這個函式
@@ -31,11 +32,25 @@ static uint64_t my_pci_read(void *opaque, hwaddr addr, unsigned size)
  */
 static void my_pci_write(void *opaque, hwaddr addr, uint64_t val, unsigned size)
 {
+    MyPCIDevState *s = MY_PCI_DEV(opaque);
+    PCIDevice *pdev = PCI_DEVICE(s); // [NEW] 取得 PCI 裝置指標用來發中斷
+
     printf("QEMU [Hardware]: Driver writes value 0x%lx to addr 0x%lx\n", val, addr);
     
-    // 我們可以根據寫入的值做不同的事 (例如點亮 LED)
-    if (val == 0xCAFEBABE) {
-        printf("QEMU [Hardware]: >>> SECRET COMMAND RECEIVED! <<<\n");
+    // [情境 1] Driver 下指令 -> 硬體做事 -> 完成後發中斷
+    if (addr == 4 && val == 0xCAFEBABE) {
+        printf("QEMU [Hardware]: >>> WORK DONE! RAISING INTERRUPT! <<<\n");
+        
+        s->irq_status = 1;
+        pci_set_irq(pdev, 1); // [NEW] 拉高 PCI 中斷線 (按住電鈴)
+    }
+
+    // [情境 2] Driver 處理完了 -> 寫入暫存器 -> 硬體關閉中斷
+    if (addr == 8) {
+        printf("QEMU [Hardware]: Interrupt Acknowledged. Lowering IRQ.\n");
+        
+        s->irq_status = 0;
+        pci_set_irq(pdev, 0); // [NEW] 拉低 PCI 中斷線 (放開電鈴)
     }
 }
 
@@ -58,8 +73,13 @@ static void my_pci_realize(PCIDevice *pdev, Error **errp)
     // 2. 將這塊記憶體掛載到 PCI BAR 0 (Base Address Register 0)
     // 這樣 Driver 就可以透過讀取 BAR0 找到這塊記憶體
     pci_register_bar(pdev, 0, PCI_BASE_ADDRESS_SPACE_MEMORY, &s->mmio);
+
+    // [關鍵修正 !!!]
+    // 告訴 PCI Bus：我要使用 INTA (Interrupt Pin A)
+    // 參數 1 = INTA, 2 = INTB, 3 = INTC, 4 = INTD
+    pci_config_set_interrupt_pin(pdev->config, 1);  // <--- 加這行！
     
-    printf("QEMU [Hardware]: my-pci-dev is plugged in!\n");
+    printf("QEMU [Hardware]: my-pci-dev (INTA) is plugged in!\n");
 }
 
 static void my_pci_class_init(ObjectClass *class, void *data)
@@ -72,7 +92,7 @@ static void my_pci_class_init(ObjectClass *class, void *data)
     
     // 設定 PCI Vendor ID 和 Device ID (這很重要，Driver 靠這個認人)
     k->vendor_id = PCI_VENDOR_ID_QEMU; // 使用 QEMU 預設廠商 ID
-    k->device_id = 0x1111;             // 我們自定義的 Device ID
+    k->device_id = 0x2222;             // 我們自定義的 Device ID
     k->class_id = PCI_CLASS_OTHERS;
     
     // 設定分類

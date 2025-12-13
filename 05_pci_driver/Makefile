@@ -1,4 +1,4 @@
-# 告訴 Kernel Build System 我們要編譯 hello.o
+# 告訴 Kernel Build System 我們要編譯 pci_driver.o
 obj-m += pci_driver.o
 
 # 指向我們之前編譯好的 Kernel 原始碼路徑

@@ -81,10 +81,12 @@ Successful Hardware-Software Interaction:
 
 <img width="1330" height="639" alt="image" src="https://github.com/user-attachments/assets/9ef8dc14-4f69-41a3-9875-9ee8d641aa5f" />
 
+Implement **Interrupt Handling (IRQ)** to replace polling.
+
+<img width="1040" height="554" alt="image" src="https://github.com/user-attachments/assets/54c1f838-2461-40be-a148-68e3ba4991b0" />
+
 
 # 🔮 Future Work
-- Implement **Interrupt Handling (IRQ)** to replace polling.
-
 - Implement **DMA (Direct Memory Access)** for bulk data transfer.
 
 - Upgrade the custom device to comply with standard **VirtIO** protocols.
